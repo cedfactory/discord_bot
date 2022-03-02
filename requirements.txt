@@ -1,0 +1,6 @@
+rich==10.6.0
+urllib3==1.26.8
+requests==2.27.1
+pandas==1.2.2
+python-dotenv==0.19.2
+discord==1.7.3
