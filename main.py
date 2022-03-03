@@ -26,6 +26,19 @@ def function_list(market):
     df = pd.read_json(dataframe_market)
     return df["symbol"].tolist()
 
+def function_value(value):
+    fdp_url = os.getenv("FPD_URL")
+    url = fdp_url+"/value?values="+value
+
+    request = urllib.request.Request(url)
+    request.add_header("User-Agent","cheese")
+    data = urllib.request.urlopen(request).read()
+    data_json = json.loads(data)
+    if data_json["status"] != "ok" or data_json["result"][value]["status"] != "ok":
+        return  data_json["result"][value]["reason"]
+
+    return data_json["result"][value]["info"]
+
 
 
 class CedFactoryBot(commands.Bot):
@@ -42,6 +55,14 @@ class CedFactoryBot(commands.Bot):
                 msg = function_list(args[0])
             else:
                 msg = "I need a market as argument"
+            await ctx.channel.send(msg)
+        
+        @self.command(name="value")
+        async def custom_command(ctx, *args):
+            if len(args) >= 1:
+                msg = function_value(args[0])
+            else:
+                msg = "I need a value as argument"
             await ctx.channel.send(msg)
 
     async def on_ready(self):
