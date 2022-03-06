@@ -9,10 +9,9 @@ import pandas as pd
 
 load_dotenv()
 token = os.getenv("BOT_TOKEN")
-
+fdp_url = os.getenv("FDP_URL")
 
 def function_list(market):
-    fdp_url = os.getenv("FPD_URL")
     url = fdp_url+"/list?markets="+market
 
     request = urllib.request.Request(url)
@@ -27,7 +26,6 @@ def function_list(market):
     return df["symbol"].tolist()
 
 def function_value(value):
-    fdp_url = os.getenv("FPD_URL")
     url = fdp_url+"/value?values="+value
 
     request = urllib.request.Request(url)
@@ -51,19 +49,25 @@ class CedFactoryBot(commands.Bot):
         
         @self.command(name="list")
         async def custom_command(ctx, *args):
+            market = args[0]
             if len(args) >= 1:
-                msg = function_list(args[0])
+                msg = function_list(market)
             else:
                 msg = "I need a market as argument"
-            await ctx.channel.send(msg)
+
+            embed=discord.Embed(title=market, description=msg, color=0xFF5733)
+            await ctx.channel.send(embed=embed)
         
         @self.command(name="value")
         async def custom_command(ctx, *args):
+            symbol = args[0]
             if len(args) >= 1:
-                msg = function_value(args[0])
+                msg = function_value(symbol)
             else:
                 msg = "I need a value as argument"
-            await ctx.channel.send(msg)
+
+            embed=discord.Embed(title=symbol, description=msg, color=0xFF5733)
+            await ctx.channel.send(embed=embed)
 
     async def on_ready(self):
         print("bot is ready")
