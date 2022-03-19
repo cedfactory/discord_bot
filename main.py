@@ -11,6 +11,25 @@ load_dotenv()
 token = os.getenv("BOT_TOKEN")
 fdp_url = os.getenv("FDP_URL")
 
+def function_recommendations(exchange):
+    url = fdp_url+"/recommendations?screener=crypto&exchange="+exchange
+    print(url)
+
+    request = urllib.request.Request(url)
+    request.add_header("User-Agent","cheese")
+    data = urllib.request.urlopen(request).read()
+    data_json = json.loads(data)
+    print(data_json)
+    if data_json["status"] != "ok":
+        return data_json["result"]["reason"]
+
+    response = ""
+    symbols = data_json["result"]
+    for symbol in symbols:
+        response = response + symbol + " : " + symbols[symbol]["RECOMMENDATION"] + "\n"
+
+    return response
+
 def function_list(market):
     url = fdp_url+"/list?markets="+market
 
@@ -19,11 +38,10 @@ def function_list(market):
     data = urllib.request.urlopen(request).read()
     data_json = json.loads(data)
     if data_json["status"] != "ok" or data_json["result"][market]["status"] != "ok":
-        return "no data received"
+        return data_json["result"][market]["reason"]
 
-    dataframe_market = data_json["result"][market]["dataframe"]
-    df = pd.read_json(dataframe_market)
-    return df["symbol"].tolist()
+    symbols = data_json["result"][market]["symbols"]
+    return symbols.split(",")
 
 def function_value(value):
     url = fdp_url+"/value?values="+value
@@ -47,6 +65,17 @@ class CedFactoryBot(commands.Bot):
         async def custom_command(ctx):
             await ctx.channel.send("Hello {}".format(ctx.author.name))
         
+        @self.command(name="recommendations")
+        async def custom_command(ctx, *args):
+            exchange = args[0]
+            if len(args) >= 1:
+                msg = function_recommendations(exchange)
+            else:
+                msg = "I need a exchange as argument"
+
+            embed=discord.Embed(title=exchange, description=msg, color=0xFF5733)
+            await ctx.channel.send(embed=embed)
+
         @self.command(name="list")
         async def custom_command(ctx, *args):
             market = args[0]
