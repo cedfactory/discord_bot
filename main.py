@@ -55,6 +55,24 @@ def function_value(value):
 
     return data_json["result"][value]["info"]
 
+def function_portfolio():
+    url = fdp_url+"/portfolio"
+
+    request = urllib.request.Request(url)
+    request.add_header("User-Agent","cheese")
+    data = urllib.request.urlopen(request).read()
+    data_json = json.loads(data)
+    if data_json["status"] != "ok":
+        return  data_json["reason"]
+
+    df_portfolio = pd.read_json(data_json["result"]["symbols"])
+    response = ""
+    for index, row in df_portfolio.iterrows():
+        recommendations = "15min / 30min / 1h : " + row["RECOMMENDATION_15m"] + " / " + row["RECOMMENDATION_30m"] + " / " + row["RECOMMENDATION_1h"]
+        response = response + row["symbol"] + " (" + recommendations + ")\n"
+
+    return response
+   
 
 
 class CedFactoryBot(commands.Bot):
@@ -96,6 +114,13 @@ class CedFactoryBot(commands.Bot):
                 msg = "I need a value as argument"
 
             embed=discord.Embed(title=symbol, description=msg, color=0xFF5733)
+            await ctx.channel.send(embed=embed)
+        
+        @self.command(name="portfolio")
+        async def custom_command(ctx, *args):
+            msg = function_portfolio()
+
+            embed=discord.Embed(title="portfolio", description=msg, color=0xFF5733)
             await ctx.channel.send(embed=embed)
 
     async def on_ready(self):
