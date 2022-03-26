@@ -55,7 +55,7 @@ def function_value(value):
 
     return data_json["result"][value]["info"]
 
-def function_portfolio():
+def function_portfolio(ctx):
     url = fdp_url+"/portfolio"
 
     request = urllib.request.Request(url)
@@ -66,13 +66,18 @@ def function_portfolio():
         return  data_json["reason"]
 
     df_portfolio = pd.read_json(data_json["result"]["symbols"])
+    embed=discord.Embed(title="portfolio", color=0xFF5733, timestamp= ctx.message.created_at)
+
     response = ""
     for index, row in df_portfolio.iterrows():
         recommendations = "15min / 30min / 1h : " + row["RECOMMENDATION_15m"] + " / " + row["RECOMMENDATION_30m"] + " / " + row["RECOMMENDATION_1h"]
         response = response + row["symbol"] + " (" + recommendations + ")\n"
+    
+        embed.add_field(name=row["symbol"], value="""
+            > Recos : 15min 30min 1h : """ + row["RECOMMENDATION_15m"] + " " + row["RECOMMENDATION_15m"] + " " + row["RECOMMENDATION_1h"] + """
+            > Change : 1h 24h : """ + "{:.2f}".format(row["change1h"]) + " " + "{:.2f}".format(row["change24h"]),inline=False)
 
-    return response
-   
+    return embed
 
 
 class CedFactoryBot(commands.Bot):
@@ -118,9 +123,7 @@ class CedFactoryBot(commands.Bot):
         
         @self.command(name="portfolio")
         async def custom_command(ctx, *args):
-            msg = function_portfolio()
-
-            embed=discord.Embed(title="portfolio", description=msg, color=0xFF5733)
+            embed = function_portfolio(ctx)
             await ctx.channel.send(embed=embed)
 
     async def on_ready(self):
